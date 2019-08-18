@@ -8,13 +8,13 @@ import (
 )
 
 type ToDo struct {
-	Title string
+	Title  string
 	Status string
 }
 
 type UpdateToDo struct {
-	Title string
-	NewTitle string
+	Title     string
+	NewTitle  string
 	NewStatus string
 }
 
@@ -55,12 +55,12 @@ func (t *Task) UpdateToDo(todo UpdateToDo, reply *ToDo) error {
 	return nil
 }
 
-func (t *Task) DeleteToDo(todo ToDo, reply *ToDo) error {
+func (t *Task) DeleteToDoWithTitle(todo string, reply *ToDo) error {
 	var deleted ToDo
 	for i, t := range ToDoList {
-		if t.Title == todo.Title && t.Status == todo.Status {
+		if t.Title == todo {
 			ToDoList = append(ToDoList[:i], ToDoList[i+1:]...)
-			deleted = todo
+			deleted = t
 			break
 		}
 	}
@@ -72,7 +72,7 @@ func main() {
 	task := new(Task)
 
 	// Publish the receivers methods
-	err:= rpc.Register(task)
+	err := rpc.Register(task)
 	if err != nil {
 		log.Fatalf("error: format of service `Task` does not meet `net/rpc` criteria.\n")
 	}

@@ -33,18 +33,18 @@ func main() {
 
 	for {
 		fmt.Println("Please input what you want to do w.r.t todo items. Exported methods are below.")
-		fmt.Println("\t- `Get:<title>`		=> Get todo item with given title and print it.")
-		fmt.Println("\t- `Update:<title>`	=> Update todo item's title and status.")
-		fmt.Println("\t- `Delete:<title>`	=> Delete todo item with given title.")
-		fmt.Println("\t- `Make:<title>`		=> Make new todo item with given title.")
+		fmt.Println("\t- `get:<title>`		=> Get todo item with given title and print it.")
+		fmt.Println("\t- `update:<title>`	=> Update todo item's title and status.")
+		fmt.Println("\t- `delete:<title>`	=> Delete todo item with given title.")
+		fmt.Println("\t- `create:<title>`	=> Create new todo item with given title.")
 		fmt.Print(">> ")
 		scanner.Scan()
 		inputs := strings.Split(scanner.Text(), ":")
+		log.Printf("%+v\n", inputs)
 		if len(inputs) > 2 {
 			log.Println("error: invalid input")
 			continue
 		}
-
 		method, title := inputs[0], inputs[1]
 		switch method {
 		case "get":
@@ -52,13 +52,13 @@ func main() {
 			if err != nil {
 				log.Fatalf("error: RPC `GetToDoWithTitle` failed\n")
 			}
-			log.Println("get: #v", reply)
+			fmt.Printf("-> Get: %+v\n\n", reply)
 		case "delete":
 			err = client.Call("Task.DeleteToDoWithTitle", title, &reply)
 			if err != nil {
 				log.Fatalf("error: RPC `DeleteToDoWithTitle` failed\n")
 			}
-			log.Println("delete: #v", reply)
+			fmt.Printf("-> Delete: %+v\n\n", reply)
 		case "update":
 			err = client.Call("Task.GetToDoWithTitle", title, &reply)
 			if err != nil {
@@ -78,13 +78,13 @@ func main() {
 			if err != nil {
 				log.Fatalf("error: RPC `UpdateToDo` failed\n")
 			}
-			log.Println("make: #v", reply)
-		case "make":
+			fmt.Printf("-> Update: %+v\n\n", reply)
+		case "create":
 			err = client.Call("Task.MakeToDoWithTitle", title, &reply)
 			if err != nil {
 				log.Fatalf("error: RPC `MakeToDoWithTitle` failed\n")
 			}
-			log.Println("reply: #v", reply)
+			fmt.Printf("-> Create: %+v\n\n", reply)
 		default:
 			log.Println("error: invalid input")
 		}

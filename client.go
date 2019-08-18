@@ -23,7 +23,6 @@ type UpdateToDo struct {
 var scanner = bufio.NewScanner(os.Stdin)
 
 func main() {
-	var reply ToDo
 
 	// Create TCP connection to localhost on port 1234
 	client, err := rpc.DialHTTP("tcp", "localhost:1234")
@@ -32,15 +31,10 @@ func main() {
 	}
 
 	for {
-		fmt.Println("Please input what you want to do w.r.t todo items. Exported methods are below.")
-		fmt.Println("\t- `get:<title>`		=> Get todo item with given title and print it.")
-		fmt.Println("\t- `update:<title>`	=> Update todo item's title and status.")
-		fmt.Println("\t- `delete:<title>`	=> Delete todo item with given title.")
-		fmt.Println("\t- `create:<title>`	=> Create new todo item with given title.")
+		var reply ToDo
 		fmt.Print(">> ")
 		scanner.Scan()
 		inputs := strings.Split(scanner.Text(), ":")
-		log.Printf("%+v\n", inputs)
 		if len(inputs) > 2 {
 			log.Println("error: invalid input")
 			continue
@@ -64,9 +58,9 @@ func main() {
 			if err != nil {
 				log.Fatalf("error: RPC `GetToDoWithTitle` failed\n")
 			}
-			fmt.Printf("[Current] Title: `%s`, Status: `%s`\n", reply.Title, reply.Status)
 			fmt.Println("Please input updated title and status like <new title>:<new status>")
-			fmt.Print(">> ")
+			fmt.Printf("[Current] Title: `%s`, Status: `%s`\n", reply.Title, reply.Status)
+			fmt.Print("(update)>> ")
 			scanner.Scan()
 			args := strings.Split(scanner.Text(), ":")
 			if len(args) > 2 {
@@ -85,6 +79,13 @@ func main() {
 				log.Fatalf("error: RPC `MakeToDoWithTitle` failed\n")
 			}
 			fmt.Printf("-> Create: %+v\n\n", reply)
+		case "help":
+			fmt.Println("Please input what you want to do w.r.t todo items. Exported methods are below.")
+			fmt.Println("- `get:<title>`	=> Get todo item with given title and print it.")
+			fmt.Println("- `update:<title>`	=> Update todo item's title and status.")
+			fmt.Println("- `delete:<title>`	=> Delete todo item with given title.")
+			fmt.Println("- `create:<title>`	=> Create new todo item with given title.")
+			fmt.Println("- `help`			=> Show this message.")
 		default:
 			log.Println("error: invalid input")
 		}

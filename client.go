@@ -33,13 +33,13 @@ func main() {
 
 	for {
 		fmt.Println("Please input what you want to do w.r.t todo items. Exported methods are below.")
-		fmt.Println("\t- `Get <title>`		=> Get todo item with given title and print it.")
-		fmt.Println("\t- `Update <title>`	=> Update todo item's title and status.")
-		fmt.Println("\t- `Delete <title>`	=> Delete todo item with given title.")
-		fmt.Println("\t- `Make <title>`		=> Make new todo item with given title.")
+		fmt.Println("\t- `Get:<title>`		=> Get todo item with given title and print it.")
+		fmt.Println("\t- `Update:<title>`	=> Update todo item's title and status.")
+		fmt.Println("\t- `Delete:<title>`	=> Delete todo item with given title.")
+		fmt.Println("\t- `Make:<title>`		=> Make new todo item with given title.")
 		fmt.Print(">> ")
 		scanner.Scan()
-		inputs := strings.Split(scanner.Text(), " ")
+		inputs := strings.Split(scanner.Text(), ":")
 		if len(inputs) > 2 {
 			log.Println("error: invalid input")
 			continue
@@ -59,7 +59,7 @@ func main() {
 				log.Fatalf("error: RPC `DeleteToDoWithTitle` failed\n")
 			}
 			log.Println("delete: #v", reply)
-		case "make":
+		case "update":
 			err = client.Call("Task.GetToDoWithTitle", title, &reply)
 			if err != nil {
 				log.Fatalf("error: RPC `GetToDoWithTitle` failed\n")
@@ -74,15 +74,15 @@ func main() {
 				continue
 			}
 			update := UpdateToDo{Title: title, NewTitle: args[0], NewStatus: args[1]}
-			err = client.Call("Task.MakeToDoWithTitle", update, &reply)
-			if err != nil {
-				log.Fatalf("error: RPC `MakeToDoWithTitle` failed\n")
-			}
-			log.Println("make: #v", reply)
-		case "update":
-			err = client.Call("Task.UpdateToDo", title, &reply)
+			err = client.Call("Task.UpdateToDo", update, &reply)
 			if err != nil {
 				log.Fatalf("error: RPC `UpdateToDo` failed\n")
+			}
+			log.Println("make: #v", reply)
+		case "make":
+			err = client.Call("Task.MakeToDoWithTitle", title, &reply)
+			if err != nil {
+				log.Fatalf("error: RPC `MakeToDoWithTitle` failed\n")
 			}
 			log.Println("reply: #v", reply)
 		default:

@@ -1,82 +1,95 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"net/rpc"
 )
 
 type ToDo struct {
 	Title string
-	Status Status
+	Status string
 }
 
-type Status string
-const (
-	DONE Status = "Done!"
-	WIP Status = "Work in progress..."
-	LAUNCHED Status = "Just launched, so let's start!"
-)
+type UpdateToDo struct {
+	Title string
+	NewTitle string
+	NewStatus string
+}
 
-var todoSlice []ToDo
+type Task int
 
-func ReadToDoWithTitle(title string) (*ToDo, error) {
-	for _, t := range todoSlice {
+var ToDoList []ToDo
+
+func (t *Task) GetToDoWithTitle(title string, reply *ToDo) error {
+	var found ToDo
+	for _, t := range ToDoList {
 		if t.Title == title {
-			return &t, nil
+			found = t
+			break
 		}
 	}
-	return nil, fmt.Errorf(
-		"error: no ToDo item with such title: %s", title)
+	*reply = found
+	return nil
 }
 
-func CreateToDoWithTitle(title string) (*ToDo, error) {
-	todo := ToDo{Title:title, Status:LAUNCHED}
-	todoSlice = append(todoSlice, todo)
-	return &todo, nil
+func (t *Task) MakeToDoWithTitle(title string, reply *ToDo) error {
+	newToDo := ToDo{Title: title, Status: "Just launched"}
+	ToDoList = append(ToDoList, newToDo)
+	*reply = newToDo
+	return nil
 }
 
-func UpdateToDoWithTitle(before string, after string) (*ToDo, error) {
+func (t *Task) UpdateToDo(todo UpdateToDo, reply *ToDo) error {
 	var updated ToDo
-	for i, t := range todoSlice {
-		if t.Title == before {
-			todoSlice[i].Title = after
-			updated = todoSlice[i]
-			return &updated, nil
+	for i, t := range ToDoList {
+		if t.Title == todo.Title {
+			ToDoList[i].Title = todo.NewTitle
+			ToDoList[i].Status = todo.NewStatus
+			updated = ToDoList[i]
+			break
 		}
 	}
-	return nil, fmt.Errorf("error: no ToDo item with such title: %s", before)
+	*reply = updated
+	return nil
 }
 
-func UpdateToDoWithStatus(title string, status Status) (*ToDo, error) {
-	var updated ToDo
-	for i, t := range todoSlice {
-		if t.Title == title {
-			todoSlice[i].Status = status
-			updated = todoSlice[i]
-			return &updated, nil
-		}
-	}
-	return nil, fmt.Errorf("error: no ToDo item with such title: %s", title)
-}
-
-func DeleteToDoWithTitle(title string) (*ToDo, error) {
+func (t *Task) DeleteToDo(todo ToDo, reply *ToDo) error {
 	var deleted ToDo
-	for i, t := range todoSlice {
-		if t.Title == title {
-			switch t.Status {
-			case DONE:
-				todoSlice = append(todoSlice[:i], todoSlice[i+1:]...)
-				deleted = t
-				return &deleted, nil
-			case WIP, LAUNCHED:
-				return nil, fmt.Errorf("error: ToDo item with title `%s` is not completed yet", title)
-			default:
-				return nil, fmt.Errorf("error: invalid status found: %+v", t)
-				}
+	for i, t := range ToDoList {
+		if t.Title == todo.Title && t.Status == todo.Status {
+			ToDoList = append(ToDoList[:i], ToDoList[i+1:]...)
+			deleted = todo
+			break
 		}
 	}
-	return nil, fmt.Errorf("error: no ToDo item with such title: %s", title)
+	*reply = deleted
+	return nil
 }
 
 func main() {
+	task := new(Task)
 
+	// Publish the receivers methods
+	err:= rpc.Register(task)
+	if err != nil {
+		log.Fatalf("error: format of service `Task` does not meet `net/rpc` criteria.\n")
+	}
+
+	// Register a HTTP handler
+	rpc.HandleHTTP()
+
+	// Listen to TCP connections on port 1234
+	listener, err := net.Listen("tcp", ":1234")
+	if err != nil {
+		log.Fatalf("error: something wrong with `net.Listen`\n")
+	}
+	log.Printf("Servering RPC server on port `:%d`\n", 1234)
+
+	// Start accepting incoming HTTP connections
+	err = http.Serve(listener, nil)
+	if err != nil {
+		log.Fatalf("error: something wrong with `http.Server`\n")
+	}
 }
